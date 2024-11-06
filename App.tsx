@@ -1,117 +1,268 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- */
-
-import React from 'react';
-import type {PropsWithChildren} from 'react';
+import { Formik } from 'formik';
+import React, { useState } from 'react';
 import {
-  SafeAreaView,
   ScrollView,
-  StatusBar,
   StyleSheet,
   Text,
-  useColorScheme,
+  TextInput,
+  TouchableOpacity,
+  // useColorScheme,
   View,
 } from 'react-native';
+import BouncyCheckBox from 'react-native-bouncy-checkbox';
 
-import {
-  Colors,
-  DebugInstructions,
-  Header,
-  LearnMoreLinks,
-  ReloadInstructions,
-} from 'react-native/Libraries/NewAppScreen';
+// import {
+//   Colors,
+// } from 'react-native/Libraries/NewAppScreen';
+import * as Yup from 'yup';
 
-type SectionProps = PropsWithChildren<{
-  title: string;
-}>;
-
-function Section({children, title}: SectionProps): React.JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
-  return (
-    <View style={styles.sectionContainer}>
-      <Text
-        style={[
-          styles.sectionTitle,
-          {
-            color: isDarkMode ? Colors.white : Colors.black,
-          },
-        ]}>
-        {title}
-      </Text>
-      <Text
-        style={[
-          styles.sectionDescription,
-          {
-            color: isDarkMode ? Colors.light : Colors.dark,
-          },
-        ]}>
-        {children}
-      </Text>
-    </View>
-  );
-}
+const passwordSchema = Yup.object().shape({
+  passwordLength: Yup.number()
+    // .min(4, 'Password should be at least 4 characters long')
+    // .max(16, 'Password should be at most 16 characters long')
+    .required('Password length is required!'),
+});
 
 function App(): React.JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
+  // const isDarkMode = useColorScheme() === 'dark';
+  const [password, setPassword] = useState('');
+  const [isPasswrodGenerated, setIsPasswrodGenerated] = useState(false);
+  const [isUpperCase, setIsUpperCase] = useState(false);
+  const [isLowerCase, setIsLowerCase] = useState(true);
+  const [isNumber, setIsNumber] = useState(false);
+  const [isSymbol, setIssymbol] = useState(false);
 
-  const backgroundStyle = {
-    backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
+  const generatePasswordString = (len: number) => {
+    let characterList = '';
+    let upperCharacters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    let lowerCharacters = upperCharacters.toLowerCase();
+    let numbers = '1234567890';
+    let specialChars = '!@#$%^&*()_+';
+
+    if (isUpperCase) {
+      characterList += upperCharacters;
+    }
+    if (isLowerCase) {
+      characterList += lowerCharacters;
+    }
+    if (isNumber) {
+      characterList += numbers;
+    }
+    if (isSymbol) {
+      characterList += specialChars;
+    }
+
+    const passwordResult = createPassword(characterList, len);
+    setPassword(passwordResult);
+    setIsPasswrodGenerated(true);
   };
 
+  const createPassword = (characters: string, passwordLength: number) => {
+    let result = '';
+    for (let i = 0; i < passwordLength; i++) {
+      result += characters.charAt(Math.floor(Math.random() * characters.length));
+    }
+    return result;
+  };
+
+  const resetPassword = () => {
+    setIsPasswrodGenerated(false);
+    setPassword('');
+    setIsLowerCase(true);
+    setIssymbol(false);
+    setIsNumber(false);
+    setIsUpperCase(false);
+  };
+
+  // const backgroundStyle = {
+  //   backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
+  // };
+
   return (
-    <SafeAreaView style={backgroundStyle}>
-      <StatusBar
-        barStyle={isDarkMode ? 'light-content' : 'dark-content'}
-        backgroundColor={backgroundStyle.backgroundColor}
-      />
-      <ScrollView
-        contentInsetAdjustmentBehavior="automatic"
-        style={backgroundStyle}>
-        <Header />
-        <View
-          style={{
-            backgroundColor: isDarkMode ? Colors.black : Colors.white,
-          }}>
-          <Section title="Step One">
-            Edit <Text style={styles.highlight}>App.tsx</Text> to change this
-            screen and then come back to see your edits.
-          </Section>
-          <Section title="See Your Changes">
-            <ReloadInstructions />
-          </Section>
-          <Section title="Debug">
-            <DebugInstructions />
-          </Section>
-          <Section title="Learn More">
-            Read the docs to discover what to do next:
-          </Section>
-          <LearnMoreLinks />
+    <ScrollView contentInsetAdjustmentBehavior="automatic" style={{ backgroundColor: 'white' }}>
+      <View style={styles.container}>
+        <View style={styles.headingContainer}>
+          <Text style={styles.containerHeading}>Password Generator</Text>
         </View>
-      </ScrollView>
-    </SafeAreaView>
+
+        <Formik
+          initialValues={{ passwordLength: '' }}
+          validationSchema={passwordSchema}
+          onSubmit={(values) => generatePasswordString(+values.passwordLength)}
+        >
+          {({
+            values,
+            errors,
+            touched,
+            handleChange,
+            handleBlur,
+            handleSubmit,
+            // isSubmitting,
+          }) => (
+            <View>
+              <View style={styles.header}>
+                <Text style={styles.headerText}>Password Length</Text>
+                {touched.passwordLength && errors.passwordLength && (
+                  <Text style={styles.error}>{errors.passwordLength}</Text>
+                )}
+                <TextInput
+                  style={styles.inputField}
+                  value={values.passwordLength}
+                  onChangeText={handleChange('passwordLength')}
+                  onBlur={handleBlur('passwordLength')}
+                  placeholder="Ex. 8"
+                  keyboardType="numeric"
+                />
+                <View style={styles.checkboxContainer}>
+                  <Text style={styles.headerText}>Include Uppercase</Text>
+                  <BouncyCheckBox
+                    isChecked={isUpperCase}
+                    onPress={() => setIsUpperCase(!isUpperCase)}
+                  />
+                </View>
+                <View style={styles.checkboxContainer}>
+                  <Text style={styles.headerText}>Include LowerCase</Text>
+                  <BouncyCheckBox
+                    isChecked={isLowerCase}
+                    onPress={() => setIsLowerCase(!isLowerCase)}
+                  />
+                </View>
+                <View style={styles.checkboxContainer}>
+                  <Text style={styles.headerText}>Include Numbers</Text>
+                  <BouncyCheckBox
+                    isChecked={isNumber}
+                    onPress={() => setIsNumber(!isNumber)}
+                  />
+                </View>
+                <View style={styles.checkboxContainer}>
+                  <Text style={styles.headerText}>Include Symbols</Text>
+                  <BouncyCheckBox
+                    isChecked={isSymbol}
+                    onPress={() => setIssymbol(!isSymbol)}
+                  />
+                </View>
+                <View />
+                {/* <Text>Password: {password}</Text> */}
+                <View style={{flex: 1, flexDirection: 'row',justifyContent: 'space-between', width: 300, marginTop: 30, marginBottom: 30}}>
+                  <TouchableOpacity onPress={() => handleSubmit()} style={styles.generateButton}>
+                    <Text style={styles.button}>Generate Password</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity onPress={resetPassword} style={{...styles.generateButton, backgroundColor: '#343a40'}}>
+                    <Text style={styles.button}>
+                      Reset
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+                {isPasswrodGenerated && (
+                  <View>
+                    <Text style={styles.headerText}>Your password has been generated.</Text>
+                  </View>
+                )}
+        <View>
+          <Text style={{...styles.genetatedPassword}}>{password}</Text>
+        </View>
+              </View>
+            </View>
+          )}
+        </Formik>
+      </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  sectionContainer: {
-    marginTop: 32,
-    paddingHorizontal: 24,
+  button: {
+    fontWeight: 'bold',
+    color: 'white',
   },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: '600',
-  },
-  sectionDescription: {
-    marginTop: 8,
+  genetatedPassword: {
+    color: 'green',
+    fontWeight: 'bold',
+    margin: 10,
+    width: 290,
     fontSize: 18,
-    fontWeight: '400',
+    marginTop: 10,
+    marginLeft: 'auto',
+    alignItems: 'center',
   },
-  highlight: {
-    fontWeight: '700',
+  generateButton: {
+    padding: 10,
+    backgroundColor: '#007bff',
+    cursor: 'pointer',
+    width:50,
+    borderRadius: 10,
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  bouncyCheckbox: {
+    fontSize: 10,
+  },
+  checkboxContainer: {
+    flex: 1,
+    flexDirection: 'row',
+    paddingLeft: 50,
+  },
+  error: {
+    color: 'red',
+    fontWeight: 'bold',
+    fontSize: 14,
+  },
+  header: {
+    // backgroundColor: 'black',
+    padding: 20,
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    height: '50%'
+  },
+  headerText: {
+    fontWeight: 'bold',
+    marginRight: 'auto',
+    marginLeft: 'auto',
+    margin: 10,
+    width: 300,
+  },
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    // backgroundColor: '#f8f9fa',
+    height: '100%',
+    backgroundColor: 'white',
+    // minHeight: '100%',
+  },
+  headingContainer: {
+    width: 300,
+    flex: 1,
+    marginLeft: 'auto',
+    marginRight: 'auto',
+    alignItems: 'center',
+  },
+  containerHeading: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: 'gray',
+    width: 300,
+    marginTop: 50,
+  },
+  inputField: {
+    backgroundColor: 'white',
+    borderColor: 'gray',
+    width: 300,
+    padding: 15,
+    marginBottom: 20,
+    borderRadius: 10,
+    // borderBottomColor: '2px solid black',
+    borderBottomColor: 'gray',  // Set the color of the bottom border
+    borderBottomWidth: 2,       // Set the thickness of the bottom border
+
+  },
+  buttonContainer: {
+    marginTop: 20,
+  },
+  resetButton: {
+    color: 'blue',
+    textDecorationLine: 'underline',
   },
 });
 
